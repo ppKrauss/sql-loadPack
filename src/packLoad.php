@@ -10,7 +10,7 @@
 	// // // //
 	// CONFIGS:
 	$PG_USER = 'postgres';   // or see use of terminal user by http://stackoverflow.com/a/17725036/287948
-	$PG_PW   = 'xxxx';  // (or include secure/configs.php)
+	$PG_PW   = 'pp@123456';  // (or include secure/configs.php)
 	$dsn="pgsql:dbname=postgres;host=localhost";
 
 
@@ -46,17 +46,42 @@
 		$packs = unpack_datapackage($basePath);  // mais de uma
 		print "\n\nBEGIN processing $MSG ...";
 		$affected=0;
-		foreach ($items as $resName=>$args) if (isset($packs[$resName])) {
-			var_dump($args);
+		foreach ($items as $resName=>$preps) foreach($preps as $args) if (isset($packs[$resName])) {
 					$cmd = array_shift($args);
 					print "\n ACHOU $resName! efetuando '$cmd' com n-args=".count($args);
 					$p = $packs[$resName];  // with-wrap
+					//var_dump($p);
 					switch ($cmd) {
 					case 'prepared_copy': // the target table was prepared before. arg1=table name.
 						$sql = "COPY $args[0] FROM '{$p['file']}' DELIMITER '{$p['sep']}' CSV HEADER;";
 						$affected += sql_exec($db, $sql, "... $cmd($args[0]) ");
-						print "  .. OK(acum. $affected).";
 						break;
+					case 'prepare_auto': // the target table was prepared before. arg1=table name.
+						$fields0 = join(' text, ',$p['fields_sql']).' text';
+						$fields2 = $fields0b = $fields3 = $fields3s = '';
+						$fields1 = join(',',$p['fields_sql']);
+						if (count($p['fields_json'])) {
+							$fields0b =", jinfo JSON"; $fields1x =$fields1.", jinfo";
+							$fields2 = ", ".join(' Text, ',$p['fields_json']).' text';
+							$fields3 = join(',',$p['fields_json']);
+							$fields3s = "'".join("','",$p['fields_json'])."'";
+						}
+						$sql = "CREATE TABLE $args[0] (id serial PRIMARY KEY, $fields0$fields0b);";
+						if (count($p['fields_json'])) {
+							$sql .= "CREATE TABLE {$args[0]}_tmp ($fields0$fields2);";
+						}
+						$affected += sql_exec($db, $sql, "... creating table...");
+						if (count($p['fields_json'])) {
+							$sql = "COPY {$args[0]}_tmp FROM '{$p['file']}' DELIMITER '{$p['sep']}' CSV HEADER;";
+							$affected += sql_exec($db, $sql, "... loading tmp $cmd($args[0]) ");
+							$sql = "INSERT INTO {$args[0]} ($fields1x)
+							  SELECT $fields1,json_object(array[ {$fields3s} ],array[ {$fields3} ])
+							  FROM {$args[0]}_tmp;
+							";
+							$affected += sql_exec($db, $sql, "... INSERT tmp ... ");
+							$affected += sql_exec($db, "DROP TABLE {$args[0]}_tmp;", "... DROP tmp ... ");
+						}
+
 					case 'commom':  // standad term.commom table
 							# code...  first create on tmp them insert into commom.
 							# check ID conversion first
@@ -66,6 +91,7 @@
 						# code...
 						break;
 					} // switch
+					print "  .. OK(acum. $affected).";
 				} // for if
 			else
 				die("\n\t-- BUG: items requerindo '$resName' inexistente no Pack");
@@ -111,6 +137,7 @@
 			//$r['fields_njson'] = count($json_fields);
 			//$r['fields_nsql'] = count($sql_fields);
 			$r['file'] = realpath("$folder/$rpath");
+			print "\n\t--DEBUG: $folder  /  $rpath";
 			$ret[$name] = $r;
 		  }
 		return $ret;

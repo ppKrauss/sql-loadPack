@@ -8,32 +8,41 @@ include 'packLoad.php';  // must be CONFIGURED for your database
 
 // // // // // // // // // //
 // CONFIGS: (complement to omLib)
-  $sqlMode = '1';
-	$basePath = realpath(__DIR__ .'/../..');
+	$basePath = realpath(__DIR__ .'/..');
 	$reini = true;  // re-init all SQL structures of the project (drop and refresh schema)
 
 
 // // // // //
 // SQL PREPARE
 $sqlIni   = [
-	"DROP TABLE if exists lixoterm.term;  CREATE TABLE lixoterm.term (term text);",
+  "DROP SCHEMA if exists sandbox CASCADE;  CREATE SCHEMA sandbox;",
+  "CREATE TABLE sandbox.ex1a (term text);",
+	"CREATE TABLE sandbox.ex1b (id serial PRIMARY KEY NOT NULL, term text, info int DEFAULT 1);",
 ];
 
 $resourceLoad_instructions = [
-	'test'=>['prepared_copy', "lixoterm.term"],
+	'example1'=>[
+      ['prepared_copy', "sandbox.ex1a"],
+      ['prepared_copy', "sandbox.ex1b(term)"],
+      ['prepare_auto', "sandbox.ex1c"],
+      // falta criar uma padrão para botar tudo...
+  ],
+  'example3'=>[
+      ['prepare_auto', "sandbox.ex3"],
+      // falta criar uma padrão para botar tudo...
+  ],
+  
 ]; // itens of each resource defined in the datapackage.
 
 
-// // // //
-// INITS:
+// // // // //
+// MAKING DATA:
 
-resourceLoad_pre($sqlIni, "SQL SCHEMAS with MODE$sqlMode", $reini);
+resourceLoad_pre($sqlIni, "SQL SCHEMAS", $reini);
 
-resourceLoad_run($basePath, $resourceLoad_instructions, "(MODE$sqlMode)");
+resourceLoad_run($basePath, $resourceLoad_instructions, "(tests)");
 
 // resourceLoad_pos($sqlFinal);
 
 print "\nEND\n";
-
-
 ?>

@@ -23,7 +23,7 @@
     {
       "name": "example1",
       "title": "TEST!",
-      "path": "data/test.csv",
+      "path": "data/example1.csv",
       "mediatype": "text/csv",
       "content":"305 itens, mix of portuguese and english",
       "schema": {
