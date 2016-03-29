@@ -37,6 +37,32 @@
       }
     },
     {
+      "name": "population",
+      "path": "data/population.csv",
+      "schema": {
+        "fields": [
+          {
+            "name": "Country Name",
+            "type": "string",
+            "role": "pk"
+          },
+          {
+            "name": "Country Code",
+            "type": "string"
+          },
+          {
+            "name": "Year",
+            "type": "date",
+            "fulltype": "date/year"
+          },
+          {
+            "name": "Value",
+            "type": "number"
+          }
+        ]
+      }
+    },
+    {
       "name": "example3",
       "title": "Sample of normalized_aff of Wayta",
       "path": "data/example3.csv",

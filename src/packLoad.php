@@ -41,6 +41,13 @@
 		return $affected;
 	}
 
+	function json2sqltype($t){ // ver tb $json2phpType
+		static $fromto = ['number'=>'numeric','string'=>'text','boolean'=>'boolean',
+				'integer'=>'integer','float'=>'float'];
+				print " conv(debug $t=..)";
+		return isset($fromto[$t])? $fromto[$t]: $t;
+	}
+
 	function resourceLoad_run($basePath,$items,$MSG=''){
 		global $db;
 		$packs = unpack_datapackage($basePath);  // mais de uma
@@ -51,17 +58,23 @@
 					print "\n ACHOU $resName! efetuando '$cmd' com n-args=".count($args);
 					$p = $packs[$resName];  // with-wrap
 					//var_dump($p);
+					$is_jsonb = false;
 					switch ($cmd) {
 					case 'prepared_copy': // the target table was prepared before. arg1=table name.
 						$sql = "COPY $args[0] FROM '{$p['file']}' DELIMITER '{$p['sep']}' CSV HEADER;";
 						$affected += sql_exec($db, $sql, "... $cmd($args[0]) ");
 						break;
-					case 'prepare_auto': // the target table was prepared before. arg1=table name.
+
+					case 'prepare_jsonb':
+						$is_jsonb = true;
+					case 'prepare_auto':
+					case 'prepare_json':
+						 // the target table will be created. arg1=table name.
 						$fields0 = join(' text, ',$p['fields_sql']).' text';
 						$fields2 = $fields0b = $fields3 = $fields3s = '';
 						$fields1 = join(',',$p['fields_sql']);
 						if (count($p['fields_json'])) {
-							$fields0b =", jinfo JSON"; $fields1x =$fields1.", jinfo";
+							$fields0b =", jinfo JSON".($is_jsonb?'B':''); $fields1x =$fields1.", jinfo";
 							$fields2 = ", ".join(' Text, ',$p['fields_json']).' text';
 							$fields3 = join(',',$p['fields_json']);
 							$fields3s = "'".join("','",$p['fields_json'])."'";
@@ -74,10 +87,20 @@
 						if (count($p['fields_json'])) {
 							$sql = "COPY {$args[0]}_tmp FROM '{$p['file']}' DELIMITER '{$p['sep']}' CSV HEADER;";
 							$affected += sql_exec($db, $sql, "... loading tmp $cmd($args[0]) ");
-							$sql = "INSERT INTO {$args[0]} ($fields1x)
-							  SELECT $fields1,json_object(array[ {$fields3s} ],array[ {$fields3} ])
-							  FROM {$args[0]}_tmp;
-							";
+							if ($is_jsonb) {
+								$pairs = [];
+								for ($i=0; $i<count($p['fields_json']); $i++) if ($p['fields_json'][$i])
+									$pairs[] = "'{$p['fields_json'][$i]}',{$p['fields_json'][$i]}::".json2sqltype($p['fields_json_types'][$i]);
+								$pairs = join(', ',$pairs);
+								$sql = "INSERT INTO {$args[0]} ($fields1x)
+								  SELECT $fields1,jsonb_build_object($pairs)
+								  FROM {$args[0]}_tmp;
+								";
+							} else
+								$sql = "INSERT INTO {$args[0]} ($fields1x)
+								  SELECT $fields1,json_object(array[ {$fields3s} ],array[ {$fields3} ])
+								  FROM {$args[0]}_tmp;
+								";
 							$affected += sql_exec($db, $sql, "... INSERT tmp ... ");
 							$affected += sql_exec($db, "DROP TABLE {$args[0]}_tmp;", "... DROP tmp ... ");
 						}
@@ -134,10 +157,7 @@
 				list($r['fields_sql'],$r['fields_json'],$r['fields_json_types']) = fields_to_parts($pack['schema']['fields'],false,true);
 			else
 				die("\n\t -- ERROR at datapackage.json: no schema/fields in $name\n");
-			//$r['fields_njson'] = count($json_fields);
-			//$r['fields_nsql'] = count($sql_fields);
 			$r['file'] = realpath("$folder/$rpath");
-			print "\n\t--DEBUG: $folder  /  $rpath";
 			$ret[$name] = $r;
 		  }
 		return $ret;
@@ -158,17 +178,18 @@
 		);
 		if (count($fields)) {
 		  foreach($fields as $ff) {
-			$name = str_replace('-','_',strtolower($only_names? $ff: $ff['name']));
-			if ( !$only_names && isset($ff['role']) ) {   // e outros recursos do prepare
-				$sql_fields[]  = $name;
-			} else
-				$json_fields[] = $name;
-			if ( $useType && isset($ff['type']) ) {
-				// parse with http://php.net/manual/en/pdo.constants.php
-				$t = strtolower($ff['type']);
-				$json_types[] = isset($json2phpType[$t])? $json2phpType[$t]: 'string';
-			} else
-				$json_types[] = 'string';// PDO::PARAM_STR;
+				$name = str_replace([' ','-'],['_','_'],strtolower($only_names? $ff: $ff['name']));
+				if ( !$only_names && isset($ff['role']) ) {   // e outros recursos do prepare
+					$sql_fields[]  = $name;
+				} else {
+					$json_fields[] = $name;
+					if ( $useType && isset($ff['type']) ) {
+						// parse with http://php.net/manual/en/pdo.constants.php
+						$t = strtolower($ff['type']);
+						$json_types[] = isset($json2phpType[$t])? $json2phpType[$t]: 'string';
+					} else
+						$json_types[] = 'string';// PDO::PARAM_STR;
+				} // else
 		   } // for
 		} // else return ...
 		return ($only_names?

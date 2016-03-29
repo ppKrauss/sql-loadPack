@@ -25,13 +25,14 @@ $resourceLoad_instructions = [
       ['prepared_copy', "sandbox.ex1a"],
       ['prepared_copy', "sandbox.ex1b(term)"],
       ['prepare_auto', "sandbox.ex1c"],
-      // falta criar uma padrão para botar tudo...
   ],
   'example3'=>[
-      ['prepare_auto', "sandbox.ex3"],
-      // falta criar uma padrão para botar tudo...
+      ['prepare_json', "sandbox.ex3"],
+      //['prepare_jsonb', "sandbox.ex3jb"],
   ],
-  
+  'population'=>[
+      ['prepare_jsonb', "sandbox.pop"],
+  ],
 ]; // itens of each resource defined in the datapackage.
 
 
