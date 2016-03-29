@@ -39,11 +39,11 @@ $resourceLoad_instructions = [
 // // // // //
 // MAKING DATA:
 
-resourceLoad_pre($sqlIni, "SQL SCHEMAS", $reini);
+sql_prepare($sqlIni, "SQL SCHEMAS", $reini);
 
 resourceLoad_run($basePath, $resourceLoad_instructions, "(tests)");
 
-// resourceLoad_pos($sqlFinal);
+//sql_prepare($sqlFinal);
 
 print "\nEND\n";
 ?>

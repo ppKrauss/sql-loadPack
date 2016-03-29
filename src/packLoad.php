@@ -10,7 +10,7 @@
 	// // // //
 	// CONFIGS:
 	$PG_USER = 'postgres';   // or see use of terminal user by http://stackoverflow.com/a/17725036/287948
-	$PG_PW   = 'pp@123456';  // (or include secure/configs.php)
+	$PG_PW   = 'xxxxx';  // (or include secure/configs.php)
 	$dsn="pgsql:dbname=postgres;host=localhost";
 
 
@@ -29,7 +29,7 @@
 	 * @param $MSG a general message about what is iniciatizating
 	 * @param $do  false abort this function
 	 */
-	function resourceLoad_pre($INI,$MSG='',$do=true) {
+	function sql_prepare($INI,$MSG='',$do=true) {
 		global $db;
 		$affected = 0;
 		if ($do) {
