@@ -1,0 +1,79 @@
+{
+  "title": "SQL-LoadPack Examples",
+  "name": "SQL-LoadPack",
+  "description": "Examples functional and performance tests, and for learn by example.",
+  "sources": [
+     {
+      "name":"Wayta, online API for support of the SciELO Publishing Schema",
+      "web": "https://github.com/scieloorg/wayta"
+    },
+    {
+     "name":"Population figures for countries",
+     "web": "https://github.com/datasets/population"
+    }
+   ],
+  "licenses": [
+    {
+      "url": "http://www.opensource.org/licenses/BSD-2-Clause",
+      "title": "FreeBSD License Simplified",
+      "id": "BSD-2-Clause"
+    }
+  ],
+  "resources": [
+    {
+      "name": "example1",
+      "title": "TEST!",
+      "path": "data/test.csv",
+      "mediatype": "text/csv",
+      "content":"305 itens, mix of portuguese and english",
+      "schema": {
+        "fields": [
+          {
+            "name": "term",
+            "role": "pk",
+            "type": "string"
+          }
+         ]
+      }
+    },
+    {
+      "name": "example3",
+      "title": "Sample of normalized_aff of Wayta",
+      "path": "data/example3.csv",
+      "sep": ";",
+      "mediatype": "text/csv",
+      "content":"mix of portuguese and english",
+      "schema": {
+        "fields": [
+          {
+            "name": "term",
+            "role": "pk",
+            "type": "string",
+            "description": "Canonic or synonym, mix of terms"
+          },
+          {
+            "name": "form",
+            "type": "string",
+            "description": "(supposed) Canonic form of the term"
+          },
+          {
+            "name": "country",
+            "type": "string"
+          },
+          {
+            "name": "iso2",
+            "type": "string"
+          },
+          {
+            "name": "state",
+            "type": "string"
+          },
+          {
+            "name": "city",
+            "type": "string"
+          }
+         ]
+      }
+    }
+  ]
+}
