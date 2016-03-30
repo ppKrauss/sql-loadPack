@@ -23,3 +23,13 @@ and check the `sandbox` at configurated database (`psql`  or pgAdminIII).
 * Optional use of JSON or JSONB datatypes, as "catch-all" fields.
 * Free table names, column names, etc.
 * Options `prepared_copy`, `prepare_auto`, `prepare_json`, and `prepare_jsonb`.
+
+## User guide
+
+Important: at your `datapackage.json`, in the `resources/schema`, as [the example](datapackage.json), add property `role` in the fields to be preserved as SQL (not encapsulating in JSON field). The default JSON field name is `jinfo`.
+
+All that you need is exemplified by `src/example.lang`, see eg. [example.php](src/example.php).
+
+
+
+
