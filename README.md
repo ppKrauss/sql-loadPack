@@ -1,5 +1,5 @@
 # sql-loadPack
-Use [OKFN's tabular-data-package standard JSON descriptors](http://data.okfn.org/doc/tabular-data-package) to load dataset into SQL database, and option to express fields in JSONB. Use faster internal SQL `COPY` command.
+Use [OKFN's tabular-data-package standard JSON descriptors](http://data.okfn.org/doc/tabular-data-package) to load dataset into SQL database, and option to express fields in JSONB. Use faster internal SQL `COPY` (or `BULK INSERT`).
 
 There are no necessary preparation, use the prefered source file in your software, eg. [src/packLoad.php](src/packLoad.php).
 
