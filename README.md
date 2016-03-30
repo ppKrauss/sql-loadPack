@@ -4,7 +4,7 @@ Use [OKFN's tabular-data-package standard JSON descriptors](http://data.okfn.org
 There are no necessary preparation, use the prefered source file in your software, eg. [src/packLoad.php](src/packLoad.php).
 
 ## Preparing examples
-To illustrate packLoad use in PostgreSQL 9.5+
+To illustrate *packLoad* use with PHP in PostgreSQL 9.5+ 
 
 ```
 git clone https://github.com/ppKrauss/sql-loadPack.git
