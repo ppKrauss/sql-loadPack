@@ -11,7 +11,7 @@
 // // // //
 // CONFIGS:
 $PG_USER = 'postgres';   // or see use of terminal user by http://stackoverflow.com/a/17725036/287948
-$PG_PW   = 'xxxx';  // (or include secure/configs.php)
+$PG_PW   = 'pp@123456';  // (or include secure/configs.php)
 $dsn="pgsql:dbname=postgres;host=localhost";
 
 
@@ -31,14 +31,17 @@ $db = new pdo($dsn,$PG_USER,$PG_PW);
  */
 function sql_prepare($INI,$MSG='',$basePath='',$do=true) {
 	global $db;
+	$time_start = microtime(true);
 	$affected = 0;
 	if ($do) {
-		print "\n --- SQL SCRIPTS ".($MSG? ": $MSG": '')." \n";
+		print "\n --- BEGIN SQL SCRIPTS ".($MSG? ": $MSG": '')." \n";
 		foreach($INI as $sql) if (preg_match("/^::([^\n]+\.sql)\$/",$sql,$m))
-				$affected += sql_exec($db, file_get_contents("$basePath/$m[1]") );
+				$affected += sql_exec($db, file_get_contents("$basePath/$m[1]"), "\n\t... running script from file");
 			else
-				$affected += sql_exec($db, $sql);
-		print "\n --- SUCESS ($affected rows affected on initialization)\n";
+				$affected += sql_exec($db, $sql, "\n\t... running script");
+		$time_end = microtime(true);
+		$execution_time = round($time_end - $time_start,2);
+		print "\n --- END SCRIPTS, SUCESS ($affected rows affected on initialization) spending $execution_time seconds\n";
 	}
 	return $affected;
 }
@@ -51,8 +54,9 @@ function sql_prepare($INI,$MSG='',$basePath='',$do=true) {
  */
 function resourceLoad_run($basePath,$items,$MSG='',$jfieldName='jinfo'){
 	global $db;
+	$time_start = microtime(true);
 	$packs = unpack_datapackage($basePath);  // mais de uma
-	print "\n\nBEGIN processing $MSG ...";
+	print "\n\tBEGIN processing $MSG ...";
 	$affected=0;
 	foreach ($items as $resName=>$preps) foreach($preps as $args) if (isset($packs[$resName])) {
 				$cmd = array_shift($args);
@@ -62,7 +66,7 @@ function resourceLoad_run($basePath,$items,$MSG='',$jfieldName='jinfo'){
 				switch ($cmd) {
 				case 'prepared_copy': // the target table was prepared before. arg1=table name.
 					$sql = "COPY $args[0] FROM '{$p['file']}' DELIMITER '{$p['sep']}' CSV HEADER;";
-					$affected += sql_exec($db, $sql, "... $cmd($args[0]) ");
+					$affected += sql_exec($db, $sql, "\n\t... $cmd($args[0]) ");
 					break;
 
 				default:  // automatic, creating table as tmp_name
@@ -85,10 +89,10 @@ function resourceLoad_run($basePath,$items,$MSG='',$jfieldName='jinfo'){
 					if (count($p['fields_json'])) {
 						$sql .= "CREATE TABLE {$args[0]}_tmp ($fields0$fields2);";
 					}
-					$affected += sql_exec($db, $sql, "... creating table...");
+					$affected += sql_exec($db, $sql, "\n\t... creating table...");
 					if (count($p['fields_json'])) {
 						$sql = "COPY {$args[0]}_tmp FROM '{$p['file']}' DELIMITER '{$p['sep']}' CSV HEADER;";
-						$affected += sql_exec($db, $sql, "... loading tmp $cmd($args[0]) ");
+						$affected += sql_exec($db, $sql, "\n\t... loading tmp $cmd($args[0]) ");
 						if ($is_jsonb) {
 							$pairs = [];
 							for ($i=0; $i<count($p['fields_json']); $i++) if ($p['fields_json'][$i])
@@ -103,8 +107,8 @@ function resourceLoad_run($basePath,$items,$MSG='',$jfieldName='jinfo'){
 							  SELECT $fields1,json_object(array[ {$fields3s} ],array[ {$fields3} ])
 							  FROM {$args[0]}_tmp;
 							";
-						$affected += sql_exec($db, $sql, "... INSERT tmp ... ");
-						$affected += sql_exec($db, "DROP TABLE {$args[0]}_tmp;", "... DROP tmp ... ");
+						$affected += sql_exec($db, $sql, "\n\t... INSERT tmp ... ");
+						$affected += sql_exec($db, "DROP TABLE {$args[0]}_tmp;", "\n\t... DROP tmp ... ");
 					}
 					break;
 
@@ -112,7 +116,9 @@ function resourceLoad_run($basePath,$items,$MSG='',$jfieldName='jinfo'){
 						die("\nOOPS under construction");
 						break;
 				} // switch
-				print "  .. OK(acum. $affected).";
+				$time_end = microtime(true);
+				$execution_time = round($time_end - $time_start,2);
+				print "\n\tEND PROCESSING (acum. $affected rows affected) spending $execution_time seconds.\n";
 			} // for if
 		else
 			die("\n\t-- BUG: items requerindo '$resName' inexistente no Pack");
