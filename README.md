@@ -3,6 +3,8 @@ Use [OKFN's tabular-data-package standard JSON descriptors](http://data.okfn.org
 
 There are no necessary preparation, use the prefered source file in your software, eg. [src/packLoad.php](src/packLoad.php).
 
+NOTE. Similar to   [okfn/dptools/load-postgresql.py](https://github.com/okfn/dptools/blob/master/bin/load-postgresql.py), but with important JSON field option. 
+
 ## Preparing examples
 To illustrate *packLoad* use with PHP in PostgreSQL 9.5+ 
 
